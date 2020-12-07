@@ -1,6 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
-import Admin from '../page/Admin';
+import { Link } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+
 export const Menu: React.FunctionComponent = () => {
   return (
     <Router>
@@ -10,24 +11,19 @@ export const Menu: React.FunctionComponent = () => {
             <Link to="/">Home</Link>
           </li>
           <li>
-            <Link to="/admin">Administration</Link>
+            <Link to="/admin">Admin</Link>
           </li>
           <li>
-            <Link to="/about">About</Link>
+            <Link to="/about">À propos</Link>
           </li>
           <li>
             <Link to="/dashboard">Dashboard</Link>
           </li>
+          <li>
+            <Link to="/signin">Connexion</Link>
+          </li>
         </ul>
         <hr />
-        <Switch>
-          <Route exact path="/"></Route>
-          <Route path="/admin">
-            <Admin />
-          </Route>
-          <Route path="/about"></Route>
-          <Route path="/dashboard"></Route>
-        </Switch>
       </div>
     </Router>
   );
