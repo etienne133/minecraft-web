@@ -1,0 +1,1 @@
+export { logIntoDB } from './logging';
