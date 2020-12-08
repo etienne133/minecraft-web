@@ -66,12 +66,12 @@ async (req, res) => {
 
 /** Login */
 router.post("/auth", async (req, res, next) => {
-  const username = req.body.username;
-  const password = req.body.password;
-  const user = await getUser(username);
+  const username: string = req.body.username;
+  const password: string  = req.body.password;
+  const user = await getUser(username.toLowerCase());
   if (!user)
     return res
-      .status(400)
+      .status(404)
       .send(
         `user: ${username} - (Request for authentification) Username does not exist`
       );
@@ -90,12 +90,18 @@ router.post("/auth", async (req, res, next) => {
   if (blocked)
     return res.status(400).send("Locked: Ask an administrator to unblock");
 
-  // STEP 3: ACTUAL AUTHENTICATION
   const validatedUser = await validateUser(user, password);
 
   const token = await validatedUser(req, res, next);
 
-  return res.status(200).send(token);
+  const response = {
+    AccessToken : token,
+    Id: user._id, 
+    Role: user.role, 
+    Username: user.username
+  }
+
+  return res.status(200).send(response);
 });
 
 /** LOGIN with cookie response  */

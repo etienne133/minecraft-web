@@ -8,7 +8,7 @@ export const checkJwtMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.headers["auth"] as string;
+  const token = req.headers["Authorization"] as string;
   let jwtPayload;
   try {
     jwtPayload = jwt.verify(token, secret);

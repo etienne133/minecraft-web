@@ -52,7 +52,7 @@ export class AuthManager {
     return hashedPassword
   }
 
-  static async validatePassword(password: string, oldPasswords: { hash: string; salt: string }[] = []): Promise<boolean> {
+   async validatePassword(password: string, oldPasswords: { hash: string; salt: string }[] = []): Promise<boolean> {
     const settings = await this.getPasswordSettings();
 
     if (password.length < settings.min || password.length > settings.max) {
