@@ -47,8 +47,9 @@ export class AuthManager {
     return randomBytes(SALT_LENGTH).toString(ENCODING);
   }
 
-  static hashPasswordWithSalt(password: string, salt: string): string {
-    return pbkdf2Sync(password, salt, ITERATIONS, 64, 'sha512').toString(ENCODING);
+  static hashPasswordWithSalt(password: string, salt: string) {
+    const hashedPassword = pbkdf2Sync(password, salt, ITERATIONS, 64, 'sha512').toString(ENCODING);
+    return hashedPassword
   }
 
   static async validatePassword(password: string, oldPasswords: { hash: string; salt: string }[] = []): Promise<boolean> {
@@ -112,9 +113,9 @@ export class AuthManager {
 
   static async setUserPasswordExpiry(): Promise<number> {
     const config = await mongoFind({ name: AUTH_NAME }, CONFIG) as { metadata: AuthSettings };
-    const expire = Number(config.metadata.expiryTimeMS);
+    //const expire = Number(config.metadata.expiryTimeMS);
 
-    return (new Date().getTime() + expire);
+    return (new Date().getTime() + 2.592e+9);
   }
 
   static async updateAuthSettings(settings: Partial<AuthSettings>): Promise<void> {

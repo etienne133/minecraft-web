@@ -14,7 +14,7 @@ async function main() {
     await DbClient.connect();
     DbClient.connect;
 
-    app.get("/", (req, res) => res.send("gti619 backend"));
+    app.get("/", (req, res) => res.send("Minecraft"));
 
     // app.use(
     //   cors({

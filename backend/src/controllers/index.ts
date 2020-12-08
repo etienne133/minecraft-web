@@ -5,9 +5,7 @@ import {
   isBlocked,
   changePassword,
   isExpired,
-  getUsersByRoleName,
   getUser,
-  validPasswordLogin
 } from "../user";
 import {
   AuthManager,
@@ -70,8 +68,6 @@ async (req, res) => {
 router.post("/auth", async (req, res, next) => {
   const username = req.body.username;
   const password = req.body.password;
-  const twofactorToken = req.body.twofactorToken;
-
   const user = await getUser(username);
   if (!user)
     return res
@@ -106,9 +102,8 @@ router.post("/auth", async (req, res, next) => {
 router.post("/auth2", async (req, res, next) => {
   const username = req.body.username;
   const password = req.body.password;
-  const twofactorToken = req.body.twofactorToken;
-
   const user = await getUser(username);
+
   if (!user)
     return res
       .status(400)
@@ -145,7 +140,7 @@ router.post("/auth2", async (req, res, next) => {
     .send(token);
 });
 
-/** CONFIG */
+/* Config */
 router.put("/config/auth", async (req, res) => {
   const config = req.body as Partial<AuthSettings>;
   AuthManager.updateAuthSettings(config);
@@ -159,14 +154,12 @@ router.put("/config/password", async (req, res) => {
   return res.sendStatus(200);
 });
 
-/*Check is logged and token status **for testing purpose** */
+/* Check is logged and token status **for testing purpose** */
 router.get(
   "/isLogged",
   checkJwtMiddleware,
   async (_req: Request, res: Response) => res.sendStatus(200)
 );
-
-/*Test */
 
 router.get(
   "/checkUserIsAdmin",

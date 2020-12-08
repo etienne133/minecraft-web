@@ -18,7 +18,6 @@ export interface User {
   failedAttempts: number;
   blocked?: boolean;
   passwordExpireTime: number;
-  twoFactorSecret?: string;
 }
 
 export const COLLECTION = "user";
@@ -178,7 +177,7 @@ export const changePassword = async (
 
   // change password
   user.salt = AuthManager.generateSalt();
-  user.hash = AuthManager.hashPasswordWithSalt(newPassword, user.salt);
+  user.hash = await AuthManager.hashPasswordWithSalt(newPassword, user.salt);
   user.passwordExpireTime = await AuthManager.setUserPasswordExpiry();
   user.blocked = false;
   user.failedAttempts = 0;
