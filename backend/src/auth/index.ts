@@ -1,1 +1,1 @@
-export { AuthManager, AuthSettings, PasswordSettings } from './AuthManager';
+export { AuthSettings, PasswordSettings } from './AuthManager';

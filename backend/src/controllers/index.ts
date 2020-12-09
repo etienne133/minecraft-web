@@ -8,7 +8,6 @@ import {
   getUser,
 } from "../user";
 import {
-  AuthManager,
   AuthSettings,
   PasswordSettings
 } from "../auth";
@@ -17,6 +16,7 @@ import { roleMiddleware } from "../role";
 import { ROLE, Role } from "../role/roles";
 import { checkJwtMiddleware } from "../jwtMiddleware";
 import { logIntoDB } from "../util/logging";
+import { updatePassSettings } from "../auth/AuthManager";
 
 const router = Router();
 
@@ -149,14 +149,14 @@ router.post("/auth2", async (req, res, next) => {
 /* Config */
 router.put("/config/auth", async (req, res) => {
   const config = req.body as Partial<AuthSettings>;
-  AuthManager.updateAuthSettings(config);
+  //await updatePassSettings(config);
 
   return res.sendStatus(200);
 });
 
 router.put("/config/password", async (req, res) => {
   const config = req.body as Partial<PasswordSettings>;
-  AuthManager.updatePassSettings(config); 
+  await updatePassSettings(config); 
   return res.sendStatus(200);
 });
 

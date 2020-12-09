@@ -1,8 +1,15 @@
 import { insertOne, mongoFind, updateOne, findMany } from "../repositories";
 import { logIntoDB } from "../util/logging";
-import { AuthManager } from "../auth";
 import { Role } from "../role/roles";
 import { signInJwt } from "../jwtMiddleware";
+import {
+  generateSalt,
+  hashPasswordWithSalt,
+  lockout,
+  setUserPasswordExpiry,
+  tryToBlock,
+  validatePassword
+} from "../auth/AuthManager";
 
 export interface User {
   _id?: string;
@@ -24,16 +31,19 @@ export const COLLECTION = "user";
 
 export const getUser = async (username: string): Promise<User> => {
   return (await mongoFind({ username }, COLLECTION)) as User;
-}
+};
 
-export const validCreation = async (user: User, password: string): Promise<boolean> => {
+export const validCreation = async (
+  user: User,
+  password: string
+): Promise<boolean> => {
   const validRole = Object.values(Role).includes(user.role);
-  const validPass = await AuthManager.validatePassword(password);
+  const validPass = await validatePassword(password);
 
   return validRole && validPass;
-}
+};
 
-export const createUser = async(
+export const createUser = async (
   username: string,
   password: string,
   role: Role
@@ -41,9 +51,9 @@ export const createUser = async(
   const userExists = await getUser(username);
   if (userExists) return false;
 
-  const salt = AuthManager.generateSalt();
-  const hash = AuthManager.hashPasswordWithSalt(password, salt);
-  const passwordExpireTime = await AuthManager.setUserPasswordExpiry();
+  const salt = generateSalt();
+  const hash = hashPasswordWithSalt(password, salt);
+  const passwordExpireTime = await setUserPasswordExpiry();
 
   // TODO: validate username doesn't already exists.
   const user = {
@@ -61,7 +71,7 @@ export const createUser = async(
     return true;
   }
   return false;
-}
+};
 
 export const isTimedout = async (user: User): Promise<boolean> => {
   let locked = false;
@@ -75,9 +85,9 @@ export const isTimedout = async (user: User): Promise<boolean> => {
     }
   }
   return locked;
-}
+};
 
-export  const isBlocked = async (user: User): Promise<boolean> => {
+export const isBlocked = async (user: User): Promise<boolean> => {
   const locked = user?.blocked;
 
   if (locked) {
@@ -86,10 +96,9 @@ export  const isBlocked = async (user: User): Promise<boolean> => {
     );
   }
   return locked;
-}
+};
 
-export const isExpired = async(user: User): Promise<boolean> => {
-
+export const isExpired = async (user: User): Promise<boolean> => {
   const locked = new Date().getTime() > user.passwordExpireTime;
 
   if (locked) {
@@ -98,12 +107,13 @@ export const isExpired = async(user: User): Promise<boolean> => {
     );
   }
   return locked;
-}
+};
 
-export const validateUser = async (
-  user: User,
-  password: string
-) => async (_req, res, _next) => {
+export const validateUser = async (user: User, password: string) => async (
+  _req,
+  res,
+  _next
+) => {
   if (!user) {
     const errorMessage = `user: ${user.username} - (Request for authentification) Username does not exist`;
     logIntoDB(errorMessage);
@@ -112,7 +122,7 @@ export const validateUser = async (
 
   const valid = validPasswordLogin(user, password);
   if (!valid) {
-    AuthManager.lockout(user);
+    lockout(user);
     res.status(401).send(`Bad password`);
   }
   const jwtToken = await signInJwt({
@@ -130,11 +140,12 @@ export const validateUser = async (
   return jwtToken;
 };
 
-export const validPasswordLogin = (user: User, providedPassword: string): boolean => {
-  return (
-    AuthManager.hashPasswordWithSalt(providedPassword, user.salt) === user.hash
-  );
-}
+export const validPasswordLogin = (
+  user: User,
+  providedPassword: string
+): boolean => {
+  return hashPasswordWithSalt(providedPassword, user.salt) === user.hash;
+};
 
 export const changePassword = async (
   username: string,
@@ -164,7 +175,7 @@ export const changePassword = async (
 
   // new password is OK
   user.oldPasswords.push({ hash: user.hash, salt: user.salt });
-  const validNewPassword = await AuthManager.validatePassword(
+  const validNewPassword = await validatePassword(
     newPassword,
     user.oldPasswords
   );
@@ -176,9 +187,9 @@ export const changePassword = async (
   }
 
   // change password
-  user.salt = AuthManager.generateSalt();
-  user.hash = await AuthManager.hashPasswordWithSalt(newPassword, user.salt);
-  user.passwordExpireTime = await AuthManager.setUserPasswordExpiry();
+  user.salt = generateSalt();
+  user.hash = await hashPasswordWithSalt(newPassword, user.salt);
+  user.passwordExpireTime = await setUserPasswordExpiry();
   user.blocked = false;
   user.failedAttempts = 0;
   updateOne(user._id, user, COLLECTION);
@@ -186,17 +197,18 @@ export const changePassword = async (
     `user: ${username} - (Request to change password) Successfully changed password`
   );
   return true;
-}
+};
 
-const setUserFailedAttempts = async(
+const setUserFailedAttempts = async (
   user: User,
   success: boolean
 ): Promise<User> => {
   user.failedAttempts = success ? 0 : user.failedAttempts + 1;
-  AuthManager.tryToBlock(user);
+  tryToBlock(user);
 
   await updateOne(user._id, user, COLLECTION);
   return user;
-}
+};
 
-export const getUsersByRoleName = async({role}: {role: Role}) => await findMany({role:role},COLLECTION)
+export const getUsersByRoleName = async ({ role }: { role: Role }) =>
+  await findMany({ role: role }, COLLECTION);
